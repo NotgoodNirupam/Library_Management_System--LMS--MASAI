@@ -1,0 +1,2 @@
+member_id,name,password_hash,email,join_date,role
+1000,nirupam,$2b$12$sjdtUmZosmTMzBkogaIYpube541P8w3gAFFk47QTlasebQuIBREK.,"nirupam1234@hot,com",2025-05-17,member
