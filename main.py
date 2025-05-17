@@ -28,7 +28,7 @@ def login_member():
     password = input("Enter Password: ")
     for member in members:
         if member['MemberID'] == member_id:
-            if bcrypt.checkpw(password.encode(), member['PasswordHash'].encode()):
+            if bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode():###bcrypt.checkpw(password.encode(), member['PasswordHash'].encode()):
                 print(f"Welcome back, {member['Name']}!")
                 return member
             else:
@@ -37,27 +37,34 @@ def login_member():
     print("Member ID not found.")
     return None
 
+# === Member Registration ===
+def register_member():
+    members = load_csv('members.csv')
+    name = input("Enter Full Name: ")
+    member_id = input("Enter new Member ID: ")
+    if any(m['MemberID'] == member_id for m in members):
+        print("Member ID already exists.")
+        return
+    password = input("Enter Password: ")
+    hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    new_member = {
+        'MemberID': member_id,
+        'Name': name,
+        'PasswordHash': hashed_password
+    }
+    append_csv('members.csv', new_member, new_member.keys())
+    print("Member registered successfully.")
+
 # === Password Reset ===
 def request_password_reset():
     member_id = input("Enter your Member ID for password reset: ")
-    
-    # Check if the member ID is empty
     if not member_id.strip():
         print("Member ID cannot be empty. Returning to the menu.")
         input("\nPress Enter to return to the main menu...")
         return
-    
     members = load_csv('members.csv')
-    found = False
-    for member in members:
-        if member['MemberID'] == member_id:
-            found = True
-            print("Password reset requested. Please wait for librarian assistance.")
-            break
-    
-    if not found:
-        print("Member ID not found. Returning to menu.")
-    
+    found = any(member['MemberID'] == member_id for member in members)
+    print("Password reset requested." if found else "Member ID not found.")
     input("\nPress Enter to return to the main menu...")
 
 # === Librarian Login ===
@@ -76,6 +83,19 @@ def login_librarian():
     print("Librarian username not found.")
     return False
 
+# === Register Librarian ===
+def register_librarian():
+    librarians = load_csv('librarians.csv')
+    username = input("Enter new librarian username: ")
+    if any(l['Username'] == username for l in librarians):
+        print("Username already exists.")
+        return
+    password = input("Enter password: ")
+    hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    new_librarian = {'Username': username, 'Password': hashed_password}
+    append_csv('librarians.csv', new_librarian, new_librarian.keys())
+    print("Librarian registered successfully.")
+
 # === Main Menu ===
 def main_menu():
     while True:
@@ -83,7 +103,8 @@ def main_menu():
         print("1. Member Login")
         print("2. Request Password Reset")
         print("3. Librarian Login")
-        print("4. Exit")
+        print("4. Register Librarian")
+        print("5. Exit")
         choice = input("> ")
 
         if choice == '1':
@@ -96,6 +117,8 @@ def main_menu():
             if login_librarian():
                 librarian_menu()
         elif choice == '4':
+            register_librarian()
+        elif choice == '5':
             print("Exiting system...")
             break
         else:
@@ -134,7 +157,8 @@ def librarian_menu():
         print("2. Remove Book")
         print("3. View Overdue Books")
         print("4. Reset Member Password")
-        print("5. Logout")
+        print("5. Register Member")
+        print("6. Logout")
         choice = input("> ")
 
         if choice == '1':
@@ -146,6 +170,8 @@ def librarian_menu():
         elif choice == '4':
             reset_member_password()
         elif choice == '5':
+            register_member()
+        elif choice == '6':
             print("Logging out...")
             break
         else:
